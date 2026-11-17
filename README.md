@@ -1,5 +1,7 @@
 # Knitting Counter
 
+**Live app: https://audreyhou.github.io/KnittingCounter/**. Open it on your phone and choose “Add to Home Screen” (or “Install app” on desktop) to use it like an app, even offline.
+
 A free, installable web app (PWA) for knitting and crochet that works on phones and desktops. It keeps your rows on track with multiple counters, row reminders and a project timer, and gives you a pattern viewer with highlighters, a row bar, chart tracking, notes, drawing and pinned bookmarks.
 
 Everything is stored **in your browser** (IndexedDB). There is no account and no server. Use **Tools → Export backup** to move your data to another device.
@@ -44,7 +46,11 @@ npm run icons     # regenerate PWA icons from public/logo.svg
 
 The build copies pdf.js CMaps, standard fonts and wasm decoders into `public/pdfjs/` (git-ignored), and the service worker precaches them so patterns open offline.
 
-The app uses hash routing and relative asset paths, so the contents of `dist/` can be hosted from any static host or sub-folder, for example GitHub Pages.
+The app uses hash routing and relative asset paths, so the contents of `dist/` can be hosted from any static host or sub-folder.
+
+### Deployment
+
+Every push to `main` runs `.github/workflows/deploy.yml`, which tests, builds and publishes `dist/` to GitHub Pages. You can also run it manually from the **Actions** tab. Installed copies of the app pick up the new version automatically the next time they are opened online.
 
 ### Project structure
 
