@@ -28,7 +28,7 @@ Everything is stored **in your browser** (IndexedDB). There is no account and no
 - Pinch or Ctrl+scroll to zoom. The viewer remembers where you were reading.
 - Keyboard shortcuts: ↑/↓ move the row bar, ←/→ step the chart, +/- zoom.
 
-On a desktop, the project page shows the counters and the pattern side by side. On a phone, it switches between them, and a compact counter stays at the bottom of the pattern.
+On a desktop, the project page shows the counters and the pattern side by side. On a phone, a project with a pattern opens straight to the pattern, with a compact counter at the bottom and a **Counters** button to switch to the full counters. The bottom bar also lists the project's other counters and has a **+ Counter** button to add a new one without leaving the pattern.
 
 ## Development
 

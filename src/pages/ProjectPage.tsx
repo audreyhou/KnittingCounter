@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { CounterCard, CounterEditor, MainCounter, NoteEditor, NotesList, RemindersCard } from '../components/Counters'
 import { Icon } from '../components/Icon'
 import { Modal } from '../components/Modal'
@@ -28,7 +28,7 @@ export function ProjectPage({ id }: { id: string }) {
   const [project, update] = useProject(id)
   const toast = useToast()
   const wide = useMediaQuery('(min-width: 980px)')
-  const [view, setView] = useState<'counters' | 'pattern'>('counters')
+  const [view, setView] = useState<'counters' | 'pattern' | null>(null)
   const [editCounter, setEditCounter] = useState<Counter | null>(null)
   const [editNote, setEditNote] = useState<RowNote | 'new' | null>(null)
   const [settings, setSettings] = useState(false)
@@ -38,7 +38,9 @@ export function ProjectPage({ id }: { id: string }) {
   const running = project?.timer.runningSince != null
   const now = useNow(1000, running)
   useWakeLock(!!project?.keepAwake)
-  useHideNav(!wide && view === 'pattern' && !!project?.patternId)
+  // On phones, a project with a pattern opens straight to the pattern.
+  const patternMode = !wide && !!project?.patternId && view !== 'counters'
+  useHideNav(patternMode)
 
   const step = (counterId: string, d: 1 | -1) =>
     update((p) => {
@@ -95,6 +97,7 @@ export function ProjectPage({ id }: { id: string }) {
     setEditCounter(null)
   }
 
+  const addCounter = () => setEditCounter(newCounter('', COUNTER_COLORS[project.counters.length % COUNTER_COLORS.length]))
   const counters = (
     <div className="counters-pane">
       <section className="timer-strip">
@@ -129,10 +132,7 @@ export function ProjectPage({ id }: { id: string }) {
             }
           />
         ))}
-        <button
-          className="card add-counter"
-          onClick={() => setEditCounter(newCounter('', COUNTER_COLORS[(project.counters.length) % COUNTER_COLORS.length]))}
-        >
+        <button className="card add-counter" onClick={addCounter}>
           <Icon name="plus" size={26} />
           <span>Add counter</span>
         </button>
@@ -202,6 +202,28 @@ export function ProjectPage({ id }: { id: string }) {
       <button className={`timer-pill ${running ? 'on' : ''}`} onClick={toggleTimer} aria-label={running ? 'Pause timer' : 'Start timer'}>
         <Icon name={running ? 'pause' : 'play'} size={14} /> {formatDuration(elapsed)}
       </button>
+      <div className="compact-extras" role="group" aria-label="Other counters">
+        {others.map((c) => (
+          <div key={c.id} className="counter-chip" style={{ '--accent': c.color } as CSSProperties}>
+            <button className="chip-name" onClick={() => setEditCounter(c)} title={`Edit ${c.name}`}>
+              {c.name}
+            </button>
+            <button className="chip-btn" onClick={() => step(c.id, -1)} aria-label={`${c.name} minus one`}>
+              <Icon name="minus" size={16} />
+            </button>
+            <span className="chip-value">
+              {c.value}
+              {c.max ? <small>/{c.max}</small> : null}
+            </span>
+            <button className="chip-btn plus" onClick={() => step(c.id, 1)} aria-label={`${c.name} plus one`}>
+              <Icon name="plus" size={16} />
+            </button>
+          </div>
+        ))}
+        <button className="add-chip" onClick={addCounter}>
+          <Icon name="plus" size={16} /> Counter
+        </button>
+      </div>
     </div>
   )
 
@@ -213,9 +235,14 @@ export function ProjectPage({ id }: { id: string }) {
       onStepCounter={step}
       header={
         !wide ? (
-          <button className="icon-btn" onClick={() => setView('counters')} aria-label="Back to counters">
-            <Icon name="back" />
-          </button>
+          <div className="viewer-title">
+            <button className="icon-btn" onClick={() => navigate('/')} aria-label="All projects">
+              <Icon name="back" />
+            </button>
+            <button className="counters-pill" onClick={() => setView('counters')}>
+              Counters
+            </button>
+          </div>
         ) : undefined
       }
       footer={!wide ? compact : undefined}
@@ -231,8 +258,8 @@ export function ProjectPage({ id }: { id: string }) {
   )
 
   return (
-    <div className={`project-page ${wide ? 'wide' : ''} ${!wide && view === 'pattern' ? 'pattern-mode' : ''}`}>
-      {(wide || view === 'counters') && (
+    <div className={`project-page ${wide ? 'wide' : ''} ${patternMode ? 'pattern-mode' : ''}`}>
+      {!patternMode && (
         <header className="page-head">
           <button className="icon-btn" onClick={() => navigate('/')} aria-label="All projects">
             <Icon name="back" />
@@ -244,8 +271,8 @@ export function ProjectPage({ id }: { id: string }) {
         </header>
       )}
       <div className="project-body">
-        {(wide || view === 'counters') && counters}
-        {(wide || view === 'pattern') && <div className="pattern-pane">{patternPane}</div>}
+        {!patternMode && counters}
+        {(wide || patternMode) && <div className="pattern-pane">{patternPane}</div>}
       </div>
 
       {alerts.length > 0 && (

@@ -1925,6 +1925,82 @@ textarea {
   order: 3;
 }
 
+.compact-extras {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  order: 2;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.compact-extras::-webkit-scrollbar {
+  display: none;
+}
+
+.counter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  padding: 2px;
+  border: 1.5px solid var(--accent);
+  border-radius: 18px;
+}
+
+.chip-name {
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 0 4px 0 8px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #eef1f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chip-btn.plus {
+  background: var(--accent);
+  color: #fff;
+}
+
+.chip-value {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.chip-value small {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.add-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  height: 36px;
+  padding: 0 12px;
+  border: 1.5px dashed #c5ccd8;
+  border-radius: 18px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--accent-dark);
+}
+
 .note-chip {
   display: inline-flex;
   align-items: center;
@@ -1957,6 +2033,30 @@ textarea {
 .timer-pill.on {
   background: #e3f8ec;
   color: #1b8a52;
+}
+
+.counters-pill {
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 7px 11px;
+  border-radius: 14px;
+  background: #eef1f6;
+  white-space: nowrap;
+  flex: none;
+}
+
+@container viewer (max-width: 340px) {
+  .counters-pill {
+    padding: 7px 8px;
+  }
+
+  .toolbar-actions .icon-btn {
+    width: 30px;
+  }
+
+  .zoom-label {
+    min-width: 36px;
+  }
 }
 
 /* Pinned bookmarks dock */
