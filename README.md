@@ -19,7 +19,7 @@ Everything is stored **in your browser** (IndexedDB). There is no account and no
 
 **Pattern library & viewer**
 - Import **PDFs** or **images**. Photos picked together become one multi-page pattern. You can drag and drop files onto the library on desktop. An installed desktop app can also open PDFs directly.
-- **Row bar**: a highlight bar that moves line by line and snaps to text lines in PDFs. It can fade the rest of the page.
+- **Row bar**: a highlight bar that moves line by line and snaps to text lines in PDFs. It stays on its line as you scroll, and you can drag it (even onto another page) or tap a line to move it there. It can fade the rest of the page.
 - **Highlighter**: drag over an area, or select text in a PDF, to highlight it in several colors.
 - **Smart highlights**: pick your size (e.g. `M` from `XS (S) M (L) …`) and every `31 (31) 33 (33)…` number group is highlighted for that size. You can also highlight every occurrence of a word such as `MM1` or `ssk`.
 - **Chart tracker**: drag a box around a chart. Rows are detected from the row numbers and columns from the chart symbols. Follow the chart row by row or stitch by stitch, with flat or in-the-round reading direction, faded or shaded rows, and fine-tuning of the grid edges. A chart can follow a project counter, so it repeats automatically.

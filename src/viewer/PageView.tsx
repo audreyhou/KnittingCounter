@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent as RMouseEvent,
   type PointerEvent as RPointerEvent,
   type ReactNode,
 } from 'react'
@@ -50,7 +51,7 @@ interface Props {
 type Drag =
   | { kind: 'stroke'; points: number[] }
   | { kind: 'rect'; x0: number; y0: number; x1: number; y1: number; tool: 'highlight' | 'bookmark' | 'chart' }
-  | { kind: 'rowbar'; offset: number }
+  | { kind: 'rowbar'; offset: number; page: number }
   | { kind: 'chart-resize'; chart: Chart; corner: number; rect: Rect }
   | { kind: 'chart-move'; chart: Chart; dx: number; dy: number; rect: Rect; moved: boolean; x0: number; y0: number }
   | { kind: 'erase' }
@@ -240,9 +241,18 @@ function PageViewImpl(props: Props) {
         case 'rect':
           next = { ...cur, x1: p.x, y1: p.y }
           break
-        case 'rowbar':
-          onAction({ type: 'rowbar', page: index, y: p.y - cur.offset })
+        case 'rowbar': {
+          // Follow the finger onto other pages; in the gap between pages stay on the current one.
+          const pages = [...pageRef.current!.parentElement!.querySelectorAll<HTMLElement>(':scope > .page')].map((el) => ({
+            page: Number(el.dataset.page),
+            rect: el.getBoundingClientRect(),
+          }))
+          const hit = pages.find((pg) => ev.clientY >= pg.rect.top && ev.clientY <= pg.rect.bottom) ?? pages.find((pg) => pg.page === cur.page)
+          if (!hit) return
+          dragRef.current = { ...cur, page: hit.page }
+          onAction({ type: 'rowbar', page: hit.page, y: (ev.clientY - hit.rect.top) / scale - cur.offset })
           return
+        }
         case 'chart-resize': {
           const r = cur.chart.rect
           let x0 = r.x
@@ -321,7 +331,7 @@ function PageViewImpl(props: Props) {
   }
 
   const onPointerDown = (e: RPointerEvent<SVGSVGElement>) => {
-    if (tool === 'pan' || e.button > 0 || multiTouch) return
+    if (tool === 'pan' || tool === 'rowbar' || e.button > 0 || multiTouch) return
     const p = toPage(e.clientX, e.clientY)
     switch (tool) {
       case 'pen':
@@ -352,18 +362,19 @@ function PageViewImpl(props: Props) {
         if (other) return onAction({ type: 'tap', tool, page: index, x: p.x, y: p.y })
         return startDrag({ kind: 'rect', x0: p.x, y0: p.y, x1: p.x, y1: p.y, tool: 'chart' }, e)
       }
-      case 'rowbar': {
-        if (rowBar && p.y >= rowBar.y && p.y <= rowBar.y + rowBar.h) return startDrag({ kind: 'rowbar', offset: p.y - rowBar.y }, e)
-        const hh = markup.rowBar?.h ?? 16
-        onAction({ type: 'rowbar', page: index, y: p.y - hh / 2 })
-        return startDrag({ kind: 'rowbar', offset: hh / 2 }, e)
-      }
       case 'eraser':
         onAction({ type: 'erase', page: index, x: p.x, y: p.y })
         return startDrag({ kind: 'erase' }, e)
       case 'note':
         return startDrag({ kind: 'tap', x: p.x, y: p.y }, e)
     }
+  }
+
+  // With the row bar tool the page still scrolls normally; a tap (not a swipe) moves the bar there.
+  const onPageClick = (e: RMouseEvent<HTMLDivElement>) => {
+    if (tool !== 'rowbar' || (e.target as Element).closest('.rowbar-grab, .rowbar-handle')) return
+    const p = toPage(e.clientX, e.clientY)
+    onAction({ type: 'rowbar', page: index, y: p.y - (markup.rowBar?.h ?? 16) / 2 })
   }
 
   const strokes = markup.strokes.filter((s) => s.page === index)
@@ -383,7 +394,7 @@ function PageViewImpl(props: Props) {
   const liveRect = (c: Chart) => (drag && (drag.kind === 'chart-resize' || drag.kind === 'chart-move') && drag.chart.id === c.id ? drag.rect : c.rect)
 
   return (
-    <div className="page" ref={pageRef} style={pageStyle} data-page={index}>
+    <div className="page" ref={pageRef} style={pageStyle} data-page={index} onClick={onPageClick}>
       <canvas ref={canvasRef} className="page-canvas" />
       {!active && <div className="page-placeholder">Page {index + 1}</div>}
       <div ref={textRef} className="textLayer" />
@@ -418,7 +429,7 @@ function PageViewImpl(props: Props) {
 
       {/* Ink layer: pen, chart guides, row bar mask, editing handles. Captures input for tools. */}
       <svg
-        className={`layer ink-layer ${tool !== 'pan' ? 'capture' : ''} tool-${tool}`}
+        className={`layer ink-layer ${tool !== 'pan' && tool !== 'rowbar' ? 'capture' : ''} tool-${tool}`}
         viewBox={`0 0 ${size.w} ${size.h}`}
         width={w}
         height={h}
@@ -464,7 +475,7 @@ function PageViewImpl(props: Props) {
               className="rowbar-handle"
               onPointerDown={(e) => {
                 const p = toPage(e.clientX, e.clientY)
-                startDrag({ kind: 'rowbar', offset: p.y - rowBar.y }, e)
+                startDrag({ kind: 'rowbar', offset: p.y - rowBar.y, page: index }, e)
               }}
             >
               <rect x={size.w - 26 / scale} y={rowBar.y + rowBar.h / 2 - 13 / scale} width={24 / scale} height={26 / scale} rx={6 / scale} fill={rowBar.color} />
@@ -499,6 +510,22 @@ function PageViewImpl(props: Props) {
           />
         )}
       </svg>
+
+      {rowBar && tool === 'rowbar' && (
+        <div
+          className="rowbar-grab"
+          style={{
+            top: (rowBar.y + rowBar.h / 2) * scale - Math.max(rowBar.h * scale, 36) / 2,
+            height: Math.max(rowBar.h * scale, 36),
+          }}
+          onPointerDown={(e) => {
+            if (e.button > 0 || multiTouch) return
+            const p = toPage(e.clientX, e.clientY)
+            startDrag({ kind: 'rowbar', offset: p.y - rowBar.y, page: index }, e)
+          }}
+          aria-hidden
+        />
+      )}
 
       <div className="pins">
         {notes.map((n) => (

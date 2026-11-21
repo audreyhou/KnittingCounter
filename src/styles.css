@@ -1660,7 +1660,11 @@ textarea {
   cursor: crosshair;
 }
 
-.ink-layer.tool-rowbar {
+.rowbar-grab {
+  position: absolute;
+  left: 0;
+  right: 0;
+  touch-action: none;
   cursor: ns-resize;
 }
 
