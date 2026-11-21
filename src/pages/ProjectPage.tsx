@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { CounterCard, CounterEditor, MainCounter, NoteEditor, NotesList, RemindersCard } from '../components/Counters'
 import { Icon } from '../components/Icon'
 import { Modal } from '../components/Modal'
@@ -97,6 +97,7 @@ export function ProjectPage({ id }: { id: string }) {
     setEditCounter(null)
   }
 
+  const addCounter = () => setEditCounter(newCounter('', COUNTER_COLORS[project.counters.length % COUNTER_COLORS.length]))
   const counters = (
     <div className="counters-pane">
       <section className="timer-strip">
@@ -131,10 +132,7 @@ export function ProjectPage({ id }: { id: string }) {
             }
           />
         ))}
-        <button
-          className="card add-counter"
-          onClick={() => setEditCounter(newCounter('', COUNTER_COLORS[(project.counters.length) % COUNTER_COLORS.length]))}
-        >
+        <button className="card add-counter" onClick={addCounter}>
           <Icon name="plus" size={26} />
           <span>Add counter</span>
         </button>
@@ -204,6 +202,28 @@ export function ProjectPage({ id }: { id: string }) {
       <button className={`timer-pill ${running ? 'on' : ''}`} onClick={toggleTimer} aria-label={running ? 'Pause timer' : 'Start timer'}>
         <Icon name={running ? 'pause' : 'play'} size={14} /> {formatDuration(elapsed)}
       </button>
+      <div className="compact-extras" role="group" aria-label="Other counters">
+        {others.map((c) => (
+          <div key={c.id} className="counter-chip" style={{ '--accent': c.color } as CSSProperties}>
+            <button className="chip-name" onClick={() => setEditCounter(c)} title={`Edit ${c.name}`}>
+              {c.name}
+            </button>
+            <button className="chip-btn" onClick={() => step(c.id, -1)} aria-label={`${c.name} minus one`}>
+              <Icon name="minus" size={16} />
+            </button>
+            <span className="chip-value">
+              {c.value}
+              {c.max ? <small>/{c.max}</small> : null}
+            </span>
+            <button className="chip-btn plus" onClick={() => step(c.id, 1)} aria-label={`${c.name} plus one`}>
+              <Icon name="plus" size={16} />
+            </button>
+          </div>
+        ))}
+        <button className="add-chip" onClick={addCounter}>
+          <Icon name="plus" size={16} /> Counter
+        </button>
+      </div>
     </div>
   )
 
