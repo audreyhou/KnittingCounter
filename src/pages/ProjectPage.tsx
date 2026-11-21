@@ -28,7 +28,7 @@ export function ProjectPage({ id }: { id: string }) {
   const [project, update] = useProject(id)
   const toast = useToast()
   const wide = useMediaQuery('(min-width: 980px)')
-  const [view, setView] = useState<'counters' | 'pattern'>('counters')
+  const [view, setView] = useState<'counters' | 'pattern' | null>(null)
   const [editCounter, setEditCounter] = useState<Counter | null>(null)
   const [editNote, setEditNote] = useState<RowNote | 'new' | null>(null)
   const [settings, setSettings] = useState(false)
@@ -38,7 +38,9 @@ export function ProjectPage({ id }: { id: string }) {
   const running = project?.timer.runningSince != null
   const now = useNow(1000, running)
   useWakeLock(!!project?.keepAwake)
-  useHideNav(!wide && view === 'pattern' && !!project?.patternId)
+  // On phones, a project with a pattern opens straight to the pattern.
+  const patternMode = !wide && !!project?.patternId && view !== 'counters'
+  useHideNav(patternMode)
 
   const step = (counterId: string, d: 1 | -1) =>
     update((p) => {
@@ -213,9 +215,14 @@ export function ProjectPage({ id }: { id: string }) {
       onStepCounter={step}
       header={
         !wide ? (
-          <button className="icon-btn" onClick={() => setView('counters')} aria-label="Back to counters">
-            <Icon name="back" />
-          </button>
+          <div className="viewer-title">
+            <button className="icon-btn" onClick={() => navigate('/')} aria-label="All projects">
+              <Icon name="back" />
+            </button>
+            <button className="counters-pill" onClick={() => setView('counters')}>
+              Counters
+            </button>
+          </div>
         ) : undefined
       }
       footer={!wide ? compact : undefined}
@@ -231,8 +238,8 @@ export function ProjectPage({ id }: { id: string }) {
   )
 
   return (
-    <div className={`project-page ${wide ? 'wide' : ''} ${!wide && view === 'pattern' ? 'pattern-mode' : ''}`}>
-      {(wide || view === 'counters') && (
+    <div className={`project-page ${wide ? 'wide' : ''} ${patternMode ? 'pattern-mode' : ''}`}>
+      {!patternMode && (
         <header className="page-head">
           <button className="icon-btn" onClick={() => navigate('/')} aria-label="All projects">
             <Icon name="back" />
@@ -244,8 +251,8 @@ export function ProjectPage({ id }: { id: string }) {
         </header>
       )}
       <div className="project-body">
-        {(wide || view === 'counters') && counters}
-        {(wide || view === 'pattern') && <div className="pattern-pane">{patternPane}</div>}
+        {!patternMode && counters}
+        {(wide || patternMode) && <div className="pattern-pane">{patternPane}</div>}
       </div>
 
       {alerts.length > 0 && (

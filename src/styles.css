@@ -1959,6 +1959,30 @@ textarea {
   color: #1b8a52;
 }
 
+.counters-pill {
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 7px 11px;
+  border-radius: 14px;
+  background: #eef1f6;
+  white-space: nowrap;
+  flex: none;
+}
+
+@container viewer (max-width: 340px) {
+  .counters-pill {
+    padding: 7px 8px;
+  }
+
+  .toolbar-actions .icon-btn {
+    width: 30px;
+  }
+
+  .zoom-label {
+    min-width: 36px;
+  }
+}
+
 /* Pinned bookmarks dock */
 .dock {
   background: #fffdf3;
