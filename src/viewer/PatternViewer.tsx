@@ -25,7 +25,7 @@ import { useMarkup } from './useMarkup'
 
 const TOOLS: { id: Tool; icon: IconName; label: string; hint?: string }[] = [
   { id: 'pan', icon: 'hand', label: 'Scroll', hint: 'Scroll and zoom. Select text to highlight it.' },
-  { id: 'rowbar', icon: 'rowbar', label: 'Row bar', hint: 'Tap a line or drag the bar. Use the arrows to move line by line.' },
+  { id: 'rowbar', icon: 'rowbar', label: 'Row bar', hint: 'Scroll as usual. Drag the bar or tap a line to move it. The arrows step line by line.' },
   { id: 'highlight', icon: 'highlight', label: 'Highlight', hint: 'Drag over a size, instruction or area to highlight it.' },
   { id: 'marker', icon: 'marker', label: 'Marker', hint: 'Highlight freehand.' },
   { id: 'pen', icon: 'pen', label: 'Pen', hint: 'Draw on the pattern.' },
