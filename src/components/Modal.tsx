@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from './Icon'
 
@@ -82,22 +82,32 @@ export function NumberStepper({
   label?: string
 }) {
   const clamp = (n: number) => Math.max(min, max !== undefined ? Math.min(max, n) : n)
+  // What the user is typing. Kept separately so the box can be emptied while editing.
+  const [draft, setDraft] = useState<string | null>(null)
+  const step = (d: 1 | -1) => {
+    setDraft(null)
+    onChange(clamp(value + d))
+  }
   return (
     <div className="stepper">
-      <button type="button" className="icon-btn" aria-label={`Decrease ${label ?? ''}`} onClick={() => onChange(clamp(value - 1))}>
+      <button type="button" className="icon-btn" aria-label={`Decrease ${label ?? ''}`} onClick={() => step(-1)}>
         <Icon name="minus" size={18} />
       </button>
       <input
         type="number"
         inputMode="numeric"
-        value={Number.isFinite(value) ? value : ''}
+        value={draft ?? (Number.isFinite(value) ? value : '')}
         aria-label={label}
         onChange={(e) => {
-          const n = parseInt(e.target.value, 10)
+          const text = e.target.value
+          setDraft(text)
+          if (text.trim() === '') return onChange(clamp(0))
+          const n = parseInt(text, 10)
           if (!Number.isNaN(n)) onChange(clamp(n))
         }}
+        onBlur={() => setDraft(null)}
       />
-      <button type="button" className="icon-btn" aria-label={`Increase ${label ?? ''}`} onClick={() => onChange(clamp(value + 1))}>
+      <button type="button" className="icon-btn" aria-label={`Increase ${label ?? ''}`} onClick={() => step(1)}>
         <Icon name="plus" size={18} />
       </button>
     </div>
