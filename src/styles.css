@@ -1979,6 +1979,25 @@ textarea {
   color: #fff;
 }
 
+.chip-btn.clear,
+.compact-clear {
+  background: transparent;
+  color: var(--muted);
+}
+
+.chip-btn.clear {
+  width: 26px;
+}
+
+.bar-btn.compact-clear {
+  width: 32px;
+}
+
+.chip-btn.clear:disabled,
+.compact-clear:disabled {
+  opacity: 0.35;
+}
+
 .chip-value {
   min-width: 30px;
   text-align: center;

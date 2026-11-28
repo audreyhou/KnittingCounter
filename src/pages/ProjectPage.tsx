@@ -16,6 +16,7 @@ import {
   mainCounter,
   newCounter,
   pauseTimer,
+  resetCounter,
   startTimer,
   triggeredReminders,
 } from '../lib/counters'
@@ -23,6 +24,8 @@ import { formatDuration } from '../lib/format'
 import { navigate } from '../router'
 import type { Counter, Project, RowNote } from '../types'
 import { LazyPatternViewer as PatternViewer } from '../viewer/LazyPatternViewer'
+
+const isCleared = (c: Counter) => c.value === 0 && c.cycles === 0
 
 export function ProjectPage({ id }: { id: string }) {
   const [project, update] = useProject(id)
@@ -33,6 +36,7 @@ export function ProjectPage({ id }: { id: string }) {
   const [editNote, setEditNote] = useState<RowNote | 'new' | null>(null)
   const [settings, setSettings] = useState(false)
   const [pickPattern, setPickPattern] = useState(false)
+  const [clearId, setClearId] = useState<string | null>(null)
   const [voice, setVoice] = useState(false)
   const [alerts, setAlerts] = useState<RowNote[]>([])
   const running = project?.timer.runningSince != null
@@ -85,6 +89,7 @@ export function ProjectPage({ id }: { id: string }) {
 
   const main = mainCounter(project)
   const others = project.counters.filter((c) => c.id !== main.id)
+  const clearing = clearId ? project.counters.find((c) => c.id === clearId) : undefined
   const active = activeNotes(project)
   const elapsed = elapsedMs(project.timer, now)
   const progress = main.max ? counterProgress(main) : null
@@ -189,6 +194,15 @@ export function ProjectPage({ id }: { id: string }) {
         <button className="bar-btn big primary" onClick={() => step(main.id, 1)} aria-label={`${main.name} plus one`}>
           <Icon name="plus" size={22} />
         </button>
+        <button
+          className="bar-btn compact-clear"
+          onClick={() => setClearId(main.id)}
+          disabled={isCleared(main)}
+          aria-label={`Clear ${main.name}`}
+          title={`Clear ${main.name}`}
+        >
+          <Icon name="reset" size={18} />
+        </button>
       </div>
       {active.length > 0 && (
         <div className="compact-notes">
@@ -217,6 +231,9 @@ export function ProjectPage({ id }: { id: string }) {
             </span>
             <button className="chip-btn plus" onClick={() => step(c.id, 1)} aria-label={`${c.name} plus one`}>
               <Icon name="plus" size={16} />
+            </button>
+            <button className="chip-btn clear" onClick={() => setClearId(c.id)} disabled={isCleared(c)} aria-label={`Clear ${c.name}`} title={`Clear ${c.name}`}>
+              <Icon name="reset" size={15} />
             </button>
           </div>
         ))}
@@ -362,6 +379,33 @@ export function ProjectPage({ id }: { id: string }) {
             if (pid && !wide) setView('pattern')
           }}
         />
+      )}
+      {clearing && (
+        <Modal
+          title={`Clear ${clearing.name}?`}
+          onClose={() => setClearId(null)}
+          footer={
+            <>
+              <span className="spacer" />
+              <button className="btn" onClick={() => setClearId(null)}>
+                Cancel
+              </button>
+              <button
+                className="btn danger"
+                onClick={() => {
+                  update((p) => ({ ...p, counters: p.counters.map((c) => (c.id === clearing.id ? resetCounter(c) : c)), updatedAt: Date.now() }))
+                  setClearId(null)
+                }}
+              >
+                <Icon name="reset" size={18} /> Clear
+              </button>
+            </>
+          }
+        >
+          <p>
+            {clearing.name} is at {clearing.value}. This sets it back to 0{clearing.cycles > 0 ? ' and clears its repeat count' : ''}.
+          </p>
+        </Modal>
       )}
     </div>
   )
